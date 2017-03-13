@@ -83,6 +83,7 @@ class CVE_2017_5638():
         return payload.format(p_cmd)
 
     def send_xpl(self, p_payload):
+        body = ''
         try:
             # Set proxy for debug request, just uncomment these lines 
             # Change the proxy port
