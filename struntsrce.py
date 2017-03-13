@@ -150,7 +150,7 @@ def main():
         port = arguments['--port']
 
     except DocoptExit as e:
-        os.system('python struntsrce.py --help')
+        os.system('python2 struntsrce.py --help')
         sys.exit(1)
 
     x = CVE_2017_5638(target)
